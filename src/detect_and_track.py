@@ -5,6 +5,8 @@ import time
 import numpy as np;
 import traceback
 from scipy import stats;
+import time;
+import datetime;
 
 ## parse arguments
 parser = argparse.ArgumentParser();
@@ -140,7 +142,7 @@ def determine_if_shrugging(history_key, new_value, queue_size = 5, threshold = 6
     print(stdev);
     return stdev > threshold;
 
-def find_and_display(capture):
+def find_and_display(capture, writer):
     #Retrieve the latest image from the webcam
     rc,img = capture.read()
 
@@ -187,11 +189,13 @@ def find_and_display(capture):
     # draw the face
     cv2.imshow('webcam_feed', img)
 
+    # record frame
+    # print(img.shape)
+    # img = np.random.randint(255, size=img.shape).astype('uint8')
+    writer.write(img);
+
     # wait so that image has time to draw
     cv2.waitKey(50) # wait for up to N milliseconds
-
-
-
 
 
 #################
@@ -203,10 +207,18 @@ face_cascade_classifier = cv2.CascadeClassifier(args.cascade_path)
 # define rectangle colro
 rectangle_color = (0,165,255)
 
-#Open the first webcam device
+#Open the first video device
 capture = cv2.VideoCapture(args.video)
-
-
+frame_width = int( capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int( capture.get( cv2.CAP_PROP_FRAME_HEIGHT))
+print(frame_height, frame_width);
+if(args.video == 0):
+    ts = time.time();
+    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H:%M:%S')
+    video_name = "webcam_output_" + st;
+else:
+    video_name = str(args.video);
+writer = cv2.VideoWriter(video_name + "_labeled.avi", cv2.VideoWriter_fourcc(*'PIM1'), 25, (frame_width, frame_height))
 
 while True:
-    find_and_display(capture);
+    find_and_display(capture, writer);
